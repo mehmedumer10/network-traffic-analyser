@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Intrusion Detection System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .card-shadow {
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .upload-area {
+            border: 3px dashed rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .upload-area:hover {
+            border-color: rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .stat-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #667eea;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .progress-bar {
+            transition: width 0.5s ease;
+        }
+        
+        .result-row:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .badge-malicious {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .badge-benign {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+    </style>
+</head>
+<body class="p-4">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-8 fade-in">
+            <div class="inline-block glass-effect rounded-2xl px-8 py-6 card-shadow mb-4">
+                <div class="flex items-center justify-center gap-4">
+                    <i class="fas fa-shield-halved text-5xl text-white"></i>
+                    <div class="text-left">
+                        <h1 class="text-4xl font-bold text-white mb-1">Network IDS</h1>
+                        <p class="text-gray-200 text-sm">Intrusion Detection System powered by AI</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Section -->
+        <div id="uploadSection" class="glass-effect rounded-2xl p-8 card-shadow mb-8 fade-in">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-bold text-white mb-2">Analyze Network Traffic</h2>
+                <p class="text-gray-200">Upload your network traffic CSV file for real-time threat detection</p>
+            </div>
+            
+            <div id="uploadArea" class="upload-area rounded-xl p-12 text-center cursor-pointer">
+                <input type="file" id="fileInput" accept=".csv" class="hidden">
+                <i class="fas fa-cloud-upload-alt text-6xl text-white mb-4 pulse-animation"></i>
+                <p class="text-xl text-white font-semibold mb-2">Drop your CSV file here</p>
+                <p class="text-gray-200 mb-4">or click to browse</p>
+                <button id="browseBtn" class="bg-white text-purple-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
+                    <i class="fas fa-folder-open mr-2"></i>Browse Files
+                </button>
+            </div>
+            
+            <div id="fileInfo" class="hidden mt-6 p-4 bg-white/10 rounded-lg">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-file-csv text-3xl text-green-400"></i>
+                        <div>
+                            <p class="text-white font-semibold" id="fileName"></p>
+                            <p class="text-gray-300 text-sm" id="fileSize"></p>
+                        </div>
+                    </div>
+                    <button id="analyzeBtn" class="bg-gradient-to-r from-green-400 to-blue-500 text-white px-8 py-3 rounded-lg font-bold hover:shadow-lg transition transform hover:scale-105">
+                        <i class="fas fa-search mr-2"></i>Analyze Now
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loadingSection" class="hidden glass-effect rounded-2xl p-12 card-shadow mb-8 text-center">
+            <div class="spinner mx-auto mb-4"></div>
+            <h3 class="text-2xl font-bold text-white mb-2">Analyzing Network Traffic...</h3>
+            <p class="text-gray-200">Processing your data with advanced AI algorithms</p>
+            <div class="mt-6 max-w-md mx-auto">
+                <div class="bg-white/20 rounded-full h-2 overflow-hidden">
+                    <div id="progressBar" class="progress-bar bg-gradient-to-r from-green-400 to-blue-500 h-full" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Dashboard -->
+        <div id="resultsSection" class="hidden">
+            <!-- Summary Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 fade-in">
+                <!-- Total Samples -->
+                <div class="stat-card glass-effect rounded-xl p-6 card-shadow">
+                    <div class="flex items-center justify-between mb-4">
+                        <i class="fas fa-database text-4xl text-blue-400"></i>
+                        <span class="text-sm text-gray-300 font-semibold">TOTAL</span>
+                    </div>
+                    <p class="text-4xl font-bold text-white mb-1" id="totalSamples">0</p>
+                    <p class="text-gray-300 text-sm">Samples Analyzed</p>
+                </div>
+
+                <!-- Malicious Count -->
+                <div class="stat-card glass-effect rounded-xl p-6 card-shadow">
+                    <div class="flex items-center justify-between mb-4">
+                        <i class="fas fa-exclamation-triangle text-4xl text-red-400"></i>
+                        <span class="text-sm text-gray-300 font-semibold">THREATS</span>
+                    </div>
+                    <p class="text-4xl font-bold text-white mb-1" id="maliciousCount">0</p>
+                    <p class="text-gray-300 text-sm">Malicious Detected</p>
+                </div>
+
+                <!-- Threat Percentage -->
+                <div class="stat-card glass-effect rounded-xl p-6 card-shadow">
+                    <div class="flex items-center justify-between mb-4">
+                        <i class="fas fa-percentage text-4xl text-yellow-400"></i>
+                        <span class="text-sm text-gray-300 font-semibold">THREAT LEVEL</span>
+                    </div>
+                    <p class="text-4xl font-bold text-white mb-1" id="threatPercentage">0%</p>
+                    <p class="text-gray-300 text-sm">Network Risk</p>
+                </div>
+
+                <!-- Confidence -->
+                <div class="stat-card glass-effect rounded-xl p-6 card-shadow">
+                    <div class="flex items-center justify-between mb-4">
+                        <i class="fas fa-check-circle text-4xl text-green-400"></i>
+                        <span class="text-sm text-gray-300 font-semibold">CONFIDENCE</span>
+                    </div>
+                    <p class="text-4xl font-bold text-white mb-1" id="avgConfidence">0%</p>
+                    <p class="text-gray-300 text-sm">Average Score</p>
+                </div>
+            </div>
+
+            <!-- Risk Level Banner -->
+            <div id="riskBanner" class="glass-effect rounded-xl p-6 card-shadow mb-8 fade-in">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <i id="riskIcon" class="fas fa-shield text-5xl"></i>
+                        <div>
+                            <h3 class="text-2xl font-bold text-white mb-1">Risk Level: <span id="riskLevel">-</span></h3>
+                            <p class="text-gray-200" id="riskMessage"></p>
+                        </div>
+                    </div>
+                    <button id="downloadReportBtn" class="bg-white text-purple-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
+                        <i class="fas fa-download mr-2"></i>Download Report
+                    </button>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <!-- Distribution Chart -->
+                <div class="glass-effect rounded-xl p-6 card-shadow fade-in">
+                    <h3 class="text-xl font-bold text-white mb-4">
+                        <i class="fas fa-chart-pie mr-2"></i>Traffic Distribution
+                    </h3>
+                    <img id="chartDistribution" class="w-full rounded-lg" alt="Distribution Chart">
+                </div>
+
+                <!-- Confidence Chart -->
+                <div class="glass-effect rounded-xl p-6 card-shadow fade-in">
+                    <h3 class="text-xl font-bold text-white mb-4">
+                        <i class="fas fa-chart-bar mr-2"></i>Confidence Distribution
+                    </h3>
+                    <img id="chartConfidence" class="w-full rounded-lg" alt="Confidence Chart">
+                </div>
+
+                <!-- Feature Importance -->
+                <div class="glass-effect rounded-xl p-6 card-shadow fade-in">
+                    <h3 class="text-xl font-bold text-white mb-4">
+                        <i class="fas fa-star mr-2"></i>Feature Importance
+                    </h3>
+                    <img id="chartFeatureImportance" class="w-full rounded-lg" alt="Feature Importance">
+                </div>
+
+                <!-- Feature Comparison -->
+                <div class="glass-effect rounded-xl p-6 card-shadow fade-in">
+                    <h3 class="text-xl font-bold text-white mb-4">
+                        <i class="fas fa-balance-scale mr-2"></i>Feature Comparison
+                    </h3>
+                    <img id="chartFeatureComparison" class="w-full rounded-lg" alt="Feature Comparison">
+                </div>
+            </div>
+
+            <!-- Detailed Results Table -->
+            <div class="glass-effect rounded-xl p-6 card-shadow fade-in">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-bold text-white">
+                        <i class="fas fa-list mr-2"></i>Detailed Detection Results
+                    </h3>
+                    <span class="text-gray-300 text-sm">Showing first 100 results</span>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-white/20">
+                                <th class="text-left text-white font-semibold p-3">Index</th>
+                                <th class="text-left text-white font-semibold p-3">Classification</th>
+                                <th class="text-left text-white font-semibold p-3">Confidence</th>
+                                <th class="text-left text-white font-semibold p-3">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsTableBody">
+                            <!-- Results will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const browseBtn = document.getElementById('browseBtn');
+    const fileInfo = document.getElementById('fileInfo');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const uploadSection = document.getElementById('uploadSection');
+    const loadingSection = document.getElementById('loadingSection');
+    const resultsSection = document.getElementById('resultsSection');
+    const progressBar = document.getElementById('progressBar');
+    
+    let selectedFile = null;
+
+    // File upload handlers
+    browseBtn.addEventListener('click', () => fileInput.click());
+    
+    uploadArea.addEventListener('click', (e) => {
+        // Prevent triggering when clicking on child elements
+        if (e.target === uploadArea || e.target.classList.contains('fa-cloud-upload-alt')) {
+            fileInput.click();
+        }
+    });
+    
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+    });
+    
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFileSelect(files[0]);
+        }
+    });
+    
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleFileSelect(e.target.files[0]);
+        }
+    });
+    
+    function handleFileSelect(file) {
+        console.log('File selected:', file.name); // Debug log
+        
+        if (!file.name.toLowerCase().endsWith('.csv')) {
+            alert('Please select a CSV file');
+            return;
+        }
+        
+        selectedFile = file;
+        document.getElementById('fileName').textContent = file.name;
+        document.getElementById('fileSize').textContent = formatFileSize(file.size);
+        fileInfo.classList.remove('hidden');
+        
+        // Scroll to analyze button for better UX
+        analyzeBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    
+    function formatFileSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    }
+    
+    // Analyze button
+    analyzeBtn.addEventListener('click', async () => {
+        if (!selectedFile) {
+            alert('Please select a CSV file first');
+            return;
+        }
+        
+        console.log('Starting analysis for file:', selectedFile.name); // Debug log
+        
+        uploadSection.classList.add('hidden');
+        loadingSection.classList.remove('hidden');
+        
+        // Animate progress bar
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += Math.random() * 15;
+            if (progress > 90) progress = 90;
+            progressBar.style.width = progress + '%';
+        }, 200);
+        
+        try {
+            // Create FormData and append file
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            
+            console.log('Sending request to server...'); // Debug log
+            
+            const response = await fetch('/analyze', {
+                method: 'POST',
+                body: formData
+            });
+            
+            clearInterval(progressInterval);
+            progressBar.style.width = '100%';
+            
+            console.log('Response received:', response.status); // Debug log
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `Server error: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log('Analysis successful:', data.success); // Debug log
+            
+            if (data.success) {
+                setTimeout(() => {
+                    loadingSection.classList.add('hidden');
+                    displayResults(data);
+                    resultsSection.classList.remove('hidden');
+                }, 500);
+            } else {
+                throw new Error(data.error || 'Unknown error occurred');
+            }
+            
+        } catch (error) {
+            console.error('Error during analysis:', error); // Debug log
+            clearInterval(progressInterval);
+            loadingSection.classList.add('hidden');
+            uploadSection.classList.remove('hidden');
+            alert('Error analyzing file: ' + error.message);
+        }
+    });
+    
+    // Rest of your displayResults function and other code remains the same...
+    function displayResults(data) {
+        const report = data.report;
+        const charts = data.charts;
+        const results = data.results;
+        
+        // Update statistics
+        document.getElementById('totalSamples').textContent = report.total_samples.toLocaleString();
+        document.getElementById('maliciousCount').textContent = report.malicious_count.toLocaleString();
+        document.getElementById('threatPercentage').textContent = report.threat_percentage.toFixed(2) + '%';
+        document.getElementById('avgConfidence').textContent = report.avg_confidence.toFixed(2) + '%';
+        
+        // Update risk level
+        const riskLevel = report.risk_level;
+        const riskBanner = document.getElementById('riskBanner');
+        const riskIcon = document.getElementById('riskIcon');
+        const riskLevelSpan = document.getElementById('riskLevel');
+        const riskMessage = document.getElementById('riskMessage');
+        
+        riskLevelSpan.textContent = riskLevel;
+        
+        // Remove any existing background classes
+        riskBanner.className = 'glass-effect rounded-xl p-6 card-shadow mb-8 fade-in';
+        
+        // Set colors and messages based on risk level
+        if (riskLevel === 'CRITICAL') {
+            riskBanner.classList.add('bg-red-500/20');
+            riskIcon.className = 'fas fa-exclamation-circle text-5xl text-red-400';
+            riskMessage.textContent = 'Immediate action required! High percentage of malicious traffic detected.';
+        } else if (riskLevel === 'HIGH') {
+            riskBanner.classList.add('bg-orange-500/20');
+            riskIcon.className = 'fas fa-exclamation-triangle text-5xl text-orange-400';
+            riskMessage.textContent = 'Elevated threat level. Monitor network closely and investigate suspicious activity.';
+        } else if (riskLevel === 'MEDIUM') {
+            riskBanner.classList.add('bg-yellow-500/20');
+            riskIcon.className = 'fas fa-shield-alt text-5xl text-yellow-400';
+            riskMessage.textContent = 'Moderate risk detected. Regular monitoring recommended.';
+        } else {
+            riskBanner.classList.add('bg-green-500/20');
+            riskIcon.className = 'fas fa-shield-halved text-5xl text-green-400';
+            riskMessage.textContent = 'Network traffic appears normal. Continue routine monitoring.';
+        }
+        
+        // Display charts
+        document.getElementById('chartDistribution').src = 'data:image/png;base64,' + charts.distribution;
+        document.getElementById('chartConfidence').src = 'data:image/png;base64,' + charts.confidence;
+        document.getElementById('chartFeatureImportance').src = 'data:image/png;base64,' + charts.feature_importance;
+        document.getElementById('chartFeatureComparison').src = 'data:image/png;base64,' + charts.feature_comparison;
+        
+        // Display results table
+        const tableBody = document.getElementById('resultsTableBody');
+        tableBody.innerHTML = '';
+        
+        results.forEach((result, idx) => {
+            const row = document.createElement('tr');
+            row.className = 'result-row border-b border-white/10 transition';
+            
+            const isMalicious = result.prediction === 'Malicious';
+            const badgeClass = isMalicious ? 'badge-malicious' : 'badge-benign';
+            const iconClass = isMalicious ? 'fa-bug' : 'fa-check';
+            
+            row.innerHTML = `
+                <td class="p-3 text-white">#${result.index + 1}</td>
+                <td class="p-3">
+                    <span class="px-3 py-1 rounded-full text-white text-sm font-semibold ${badgeClass}">
+                        <i class="fas ${iconClass} mr-1"></i>${result.prediction}
+                    </span>
+                </td>
+                <td class="p-3">
+                    <div class="flex items-center gap-2">
+                        <div class="flex-1 bg-white/20 rounded-full h-2 overflow-hidden">
+                            <div class="bg-gradient-to-r from-blue-400 to-green-400 h-full" style="width: ${result.confidence}%"></div>
+                        </div>
+                        <span class="text-white text-sm font-semibold">${result.confidence.toFixed(1)}%</span>
+                    </div>
+                </td>
+                <td class="p-3">
+                    ${result.confidence > 95 ? '<span class="text-red-400"><i class="fas fa-fire mr-1"></i>High Confidence</span>' : 
+                      result.confidence > 80 ? '<span class="text-yellow-400"><i class="fas fa-exclamation mr-1"></i>Medium</span>' : 
+                      '<span class="text-green-400"><i class="fas fa-check mr-1"></i>Normal</span>'}
+                </td>
+            `;
+            
+            tableBody.appendChild(row);
+        });
+        
+        // Store report data for download
+        window.currentReport = report;
+    }
+    
+    // Download report
+    document.getElementById('downloadReportBtn').addEventListener('click', async () => {
+        if (!window.currentReport) {
+            alert('No report available to download');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/download-report', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ report: window.currentReport })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Create and download JSON file
+                const blob = new Blob([data.report], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `IDS_Report_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } else {
+                alert('Error downloading report: ' + data.error);
+            }
+        } catch (error) {
+            alert('Error downloading report: ' + error.message);
+        }
+    });
+
+    // Add new analysis button functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add new analysis button to results section
+        const riskBanner = document.getElementById('riskBanner');
+        const newAnalysisBtn = document.createElement('button');
+        newAnalysisBtn.id = 'newAnalysisBtn';
+        newAnalysisBtn.className = 'bg-white text-purple-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition ml-4';
+        newAnalysisBtn.innerHTML = '<i class="fas fa-sync-alt mr-2"></i>New Analysis';
+        
+        riskBanner.querySelector('.flex').appendChild(newAnalysisBtn);
+        
+        // New analysis button handler
+        newAnalysisBtn.addEventListener('click', function() {
+            resultsSection.classList.add('hidden');
+            uploadSection.classList.remove('hidden');
+            // Reset file selection
+            selectedFile = null;
+            fileInput.value = '';
+            fileInfo.classList.add('hidden');
+        });
+    });
+</script>
+</body>
+</html>
